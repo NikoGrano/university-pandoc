@@ -7,7 +7,9 @@ import subprocess
 import random
 import string
 import shutil
+import requests
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 class DockerError(Exception):
     """Custom exception for Docker-related errors"""
@@ -44,9 +46,18 @@ def ensure_docker_image():
     except subprocess.CalledProcessError as e:
         raise DockerError(f"Failed to check/build Docker image: {str(e)}")
 
+def extract_zotero_id(content):
+    """Extract Zotero ID from markdown frontmatter"""
+    import re
+    match = re.search(r'^---\n(.*?\n)?.*?zotero:\s*["\']?([^"\'\n]+)["\']?.*?\n---', content, re.DOTALL)
+    if match:
+        return match.group(2)
+    return None
+
 def combine_markdown_files(directory):
     """Recursively combine all markdown files from directory into single file"""
     combined_content = []
+    zotero_id = None
     
     # Walk through directory recursively
     for root, _, files in os.walk(directory):
@@ -55,9 +66,26 @@ def combine_markdown_files(directory):
                 file_path = os.path.join(root, file)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
+                    # Check for Zotero ID in each file
+                    file_zotero_id = extract_zotero_id(content)
+                    if file_zotero_id:
+                        zotero_id = file_zotero_id
                     combined_content.append(f"\n\n{content}")
     
-    return ''.join(combined_content)
+    return ''.join(combined_content), zotero_id
+
+def download_zotero_bibliography(zotero_id):
+    """Download bibliography from Zotero"""
+    url = f"http://localhost:23119/better-bibtex/export/collection?/1/{zotero_id}.bibtex"
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise Exception(f"Failed to download Zotero bibliography: HTTP {response.status_code}")
+    return response.text
+
+def merge_bibliographies(existing_bib, zotero_bib):
+    """Merge two bibliography contents"""
+    # Simple concatenation for now - could be made smarter to detect duplicates
+    return existing_bib + "\n\n" + zotero_bib
 
 def generate_random_password(length=20):
     """Generate a random password"""
@@ -65,7 +93,7 @@ def generate_random_password(length=20):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: build_pdf.py <source_directory> [--ro]")
+        print("Usage: build_pdf.py <source_directory> [--ro] [--zotero ZOTERO_ID]")
         sys.exit(1)
 
     try:
@@ -96,8 +124,8 @@ def main():
     os.makedirs(temp_dir, exist_ok=True)
 
     try:
-        # Combine markdown files
-        combined_content = combine_markdown_files(source_dir)
+        # Combine markdown files and get Zotero ID if present
+        combined_content, markdown_zotero_id = combine_markdown_files(source_dir)
         with open(os.path.join(temp_dir, "input.md"), 'w', encoding='utf-8') as f:
             f.write(combined_content)
 
@@ -114,7 +142,36 @@ def main():
 
         # Copy bibliography if exists
         bib_exists = os.path.exists(os.path.join(source_dir, "bibliography.bib"))
-        if bib_exists:
+        
+        # Get Zotero ID from command line or markdown
+        zotero_id = None
+        if "--zotero" in sys.argv:
+            zotero_index = sys.argv.index("--zotero")
+            if zotero_index + 1 < len(sys.argv):
+                zotero_id = sys.argv[zotero_index + 1]
+        if not zotero_id and markdown_zotero_id:
+            zotero_id = markdown_zotero_id
+        
+        if zotero_id:
+            try:
+                zotero_bib = download_zotero_bibliography(zotero_id)
+                if bib_exists:
+                    # Merge bibliographies
+                    with open(os.path.join(source_dir, "bibliography.bib"), 'r', encoding='utf-8') as f:
+                        existing_bib = f.read()
+                    merged_bib = merge_bibliographies(existing_bib, zotero_bib)
+                    with open(os.path.join(temp_dir, "bibliography.bib"), 'w', encoding='utf-8') as f:
+                        f.write(merged_bib)
+                else:
+                    # Just write Zotero bibliography
+                    with open(os.path.join(temp_dir, "bibliography.bib"), 'w', encoding='utf-8') as f:
+                        f.write(zotero_bib)
+                bib_exists = True
+            except Exception as e:
+                print(f"Warning: Failed to process Zotero bibliography: {str(e)}")
+                if bib_exists:
+                    shutil.copy2(os.path.join(source_dir, "bibliography.bib"), temp_dir)
+        elif bib_exists:
             shutil.copy2(os.path.join(source_dir, "bibliography.bib"), temp_dir)
 
         # Copy logo if exists

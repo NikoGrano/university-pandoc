@@ -39,6 +39,30 @@ A tool to combine multiple markdown files into a single PDF document with proper
 ./run.py <source_directory>
 ```
 
+### Using Zotero Bibliography
+You can specify a Zotero collection ID in two ways:
+
+1. As a command line argument:
+```bash
+./run.py <source_directory> --zotero COLLECTION_ID
+```
+
+2. In your markdown frontmatter:
+```yaml
+---
+title: "Document Title"
+author: "Author Name"
+zotero: COLLECTION_ID
+---
+```
+
+This will:
+- Download the bibliography from your local Zotero instance
+- If a bibliography.bib exists in your source directory, merge it with the downloaded one
+- Use the combined bibliography in your document
+
+Note: Command line argument takes precedence over the frontmatter if both are present.
+
 ### Read-only PDF
 To generate a password-protected PDF that can only be viewed:
 ```bash
