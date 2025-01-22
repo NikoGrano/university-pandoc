@@ -17,12 +17,13 @@
     pdflang={fi},
 }
 
-\usepackage[style=verbose,
-             backend=biber]{biblatex}
+\usepackage[utf8]{inputenc}
+\usepackage[notes,backend=biber,language=finnish]{biblatex-chicago}
 
 % Bibliography formatting
 \addbibresource{$bibliography$}
 \DeclareLanguageMapping{finnish}{finnish-apa}
+\DeclareLanguageMapping{finnish}{finnish-chicago}
 
 % Set bibliography spacing
 \setlength{\bibhang}{2em}
@@ -53,6 +54,7 @@
 \tolerance=1000
 \emergencystretch=1em
 
+% Page layout
 \geometry{a4paper, margin=3.5cm}
 
 % Page numbering setup

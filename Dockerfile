@@ -16,6 +16,9 @@ RUN apk add --no-cache --quiet \
           pgf \
           environ \
           trimspaces \
-          footmisc
+          footmisc \
+          biblatex-sbl \
+          biblatex-chicago \
+          xstring
 
 WORKDIR /workdir

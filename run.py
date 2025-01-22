@@ -35,7 +35,7 @@ def ensure_docker_image():
             capture_output=True,
             text=True
         )
-        
+
         if not result.stdout.strip():
             print("Docker image not found. Building...")
             subprocess.run(
@@ -58,7 +58,7 @@ def combine_markdown_files(directory):
     """Recursively combine all markdown files from directory into single file"""
     combined_content = []
     zotero_id = None
-    
+
     # Walk through directory recursively
     for root, _, files in os.walk(directory):
         for file in sorted(files):
@@ -71,7 +71,7 @@ def combine_markdown_files(directory):
                     if file_zotero_id:
                         zotero_id = file_zotero_id
                     combined_content.append(f"\n\n{content}")
-    
+
     return ''.join(combined_content), zotero_id
 
 def download_zotero_bibliography(zotero_id):
@@ -106,7 +106,7 @@ def main():
     source_dir = sys.argv[1]
     readonly_mode = False
     owner_password = ""
-    
+
     # Check for --ro argument and its value
     if "--ro" in sys.argv:
         readonly_mode = True
@@ -133,8 +133,8 @@ def main():
         if not os.path.exists('lib'):
             print("Error: 'lib' directory not found")
             sys.exit(1)
-        
-        required_files = ['wordcount.lua', 'chicago.csl', 'template.tex']
+
+        required_files = ['wordcount.lua', 'template.tex']
         for file in required_files:
             if not os.path.exists(os.path.join('lib', file)):
                 print(f"Error: Required file 'lib/{file}' not found")
@@ -142,7 +142,7 @@ def main():
 
         # Copy bibliography if exists
         bib_exists = os.path.exists(os.path.join(source_dir, "bibliography.bib"))
-        
+
         # Get Zotero ID from command line or markdown
         zotero_id = None
         if "--zotero" in sys.argv:
@@ -151,7 +151,7 @@ def main():
                 zotero_id = sys.argv[zotero_index + 1]
         if not zotero_id and markdown_zotero_id:
             zotero_id = markdown_zotero_id
-        
+
         if zotero_id:
             try:
                 zotero_bib = download_zotero_bibliography(zotero_id)
@@ -190,7 +190,6 @@ def main():
             "--output", "/workdir/out.tex",
             "--lua-filter=/pandoc_files/wordcount.lua",
             "-f", "markdown",
-            "--csl=/pandoc_files/chicago.csl",
             "--template=/pandoc_files/template.tex",
             "--standalone",
             "--biblatex"
@@ -211,7 +210,7 @@ def main():
         try:
             # Run pandoc
             subprocess.run(pandoc_cmd, check=True)
-            
+
             # Verify out.tex was created
             if not os.path.exists(os.path.join(temp_dir, "out.tex")):
                 print("Error: Pandoc failed to create out.tex")
@@ -219,7 +218,7 @@ def main():
         except subprocess.CalledProcessError as e:
             print(f"Error running pandoc command: {str(e)}")
             sys.exit(1)
-        
+
         for _ in range(2):
             try:
                 subprocess.run([
@@ -241,7 +240,7 @@ def main():
                 "pandoc_pdf_local",
                 "/workdir/out"
             ], check=True)
-            
+
             # Verify biber output files exist
             if not os.path.exists(os.path.join(temp_dir, "out.bbl")):
                 print("Error: Biber failed to create out.bbl")
