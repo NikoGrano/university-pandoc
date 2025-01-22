@@ -1,0 +1,5 @@
+src/
+dev/
+*.pdf
+*.swp
+temp_workdir/

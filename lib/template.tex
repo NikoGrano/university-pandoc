@@ -1,0 +1,175 @@
+\documentclass[12pt]{extarticle}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage{lastpage}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,
+    urlcolor=blue,
+    citecolor=black,
+    pdftitle={$title$},
+    pdfauthor={$author$},
+    pdfsubject={$subtitle$},
+    pdflang={fi},
+}
+
+\usepackage[style=verbose,
+             backend=biber]{biblatex}
+
+% Bibliography formatting
+\addbibresource{$bibliography$}
+\DeclareLanguageMapping{finnish}{finnish-apa}
+
+% Set bibliography spacing
+\setlength{\bibhang}{2em}
+\setlength{\bibitemsep}{1.5\itemsep}
+
+\newcounter{wordcount}
+\graphicspath{{.}}  % Look for images in current directory
+\setmainfont{Linux Libertine}
+
+% Set default line spacing to 1.5
+\onehalfspacing
+\usepackage{fancyhdr}
+
+% Custom footnote and page breaking settings
+\usepackage[bottom,multiple,stable]{footmisc}
+\interfootnotelinepenalty=9000
+\makeatletter
+\renewcommand\@makefntext[1]{\noindent\makebox[2em][r]{\@thefnmark.\hspace{1em}}#1}
+\makeatother
+\setlength{\footnotesep}{1.5em}  % Space between footnotes
+\setlength{\skip\footins}{2em}   % Space between text and footnotes
+\setlength{\dimen\footins}{20\baselineskip}  % Max height for footnotes
+\raggedbottom  % Allows some flexibility in page breaking
+\interfootnotelinepenalty=9000
+\interlinepenalty=5000
+\widowpenalty=5000
+\clubpenalty=5000
+\tolerance=1000
+\emergencystretch=1em
+
+\geometry{a4paper, margin=3.5cm}
+
+% Page numbering setup
+\pagestyle{fancy}
+\fancyhf{} % Clear all header and footer fields
+\fancyhead[L]{\leftmark} % Section name in left header
+\fancyfoot[C]{\thepage} % Page number in center footer
+\renewcommand{\headrulewidth}{0.4pt} % Add a line under the header
+
+\begin{document}
+
+% Remove page numbers from first pages
+\pagenumbering{gobble}
+
+% Cover page
+\begin{titlepage}
+\thispagestyle{empty}
+
+% Logo
+\vspace*{-2cm}  % Move up to counter page margin
+\hspace*{-2.5cm}  % Move left to counter page margin
+\includegraphics[width=3cm]{logo.jpg}
+\vspace*{1cm}
+
+\vspace*{2cm}
+
+\begin{center}
+    \Huge
+    \textbf{$title$}
+    
+    \vspace{0.5cm}
+    
+    \Large
+    $subtitle$
+\end{center}
+
+\vfill
+
+{
+\setstretch{0.75}  % Tighter spacing for cover page
+\begin{flushright}
+    \large
+    $school$ \\
+    $studies$ \\
+    $direction$ \\
+    \vspace{1cm}
+    $tyon_tyyppi$ \\
+    $author$ \\
+    \vspace{1cm}
+    $date$ \\
+    $place$
+\end{flushright}
+}
+
+\end{titlepage}
+
+% Document details page
+\newpage
+\thispagestyle{empty}
+
+% First section of table
+\begin{tabular}{|p{0.75\textwidth}|p{0.25\textwidth}|}
+\hline
+
+% Second section of table
+\multicolumn{2}{|p{\textwidth}|}{%
+    \begin{minipage}[t]{\dimexpr\textwidth-2\tabcolsep\relax}
+        \begin{tabular}{p{0.33\textwidth}p{0.33\textwidth}p{0.34\textwidth}}
+            {\footnotesize Sivumäärä:} & {\footnotesize Sanamäärä:} & {\footnotesize Lukuaika:} \\
+            \pageref{LastPage} & $wordcount$ & $readingtime$ min
+        \end{tabular}
+    \end{minipage}
+} \\ \hline
+
+{\footnotesize Laatijan nimi} & {\footnotesize Opiskelijanumero} \\
+$author$ & $opiskelijanumero$ \\ \hline
+{\footnotesize Työn nimi} & {\footnotesize Päivämäärä} \\
+$title$ & $date$ \\ \hline
+{\footnotesize Opintojakson nimi} & {\footnotesize Opintojakso} \\
+$opintojakson_nimi$ & $opintojakso$ \\ \hline
+{\footnotesize Opintokokonaisuuden nimi} & {\footnotesize Opintokokonaisuus} \\
+$opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
+
+% Last section of table
+\multicolumn{2}{|l|}{{\footnotesize Lisätiedot}} \\
+\multicolumn{2}{|p{\textwidth}|}{%
+    \begin{minipage}[t][\dimexpr\textheight-10cm\relax][t]{\dimexpr\textwidth-2\tabcolsep\relax}
+        $lisatiedot$
+    \end{minipage}
+} \\ \hline
+\end{tabular}
+\clearpage
+
+% Table of Contents page
+\renewcommand{\contentsname}{SISÄLLYS}
+\renewcommand{\refname}{LÄHTEET}
+
+% Modify TOC style
+\makeatletter
+\renewcommand{\@dotsep}{2}
+\renewcommand{\numberline}[1]{#1\hspace{1em}}
+\renewcommand{\l@section}{\@dottedtocline{1}{0em}{2.5em}}
+\renewcommand{\l@subsection}{\@dottedtocline{2}{2.5em}{2.5em}}
+\renewcommand{\l@subsubsection}{\@dottedtocline{3}{5em}{2.5em}}
+\makeatother
+
+% Add TOC
+\tableofcontents
+\clearpage
+
+% Start page numbering
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% Set main text font size to 14pt
+{\fontsize{14pt}{16.8pt}\selectfont
+$body$
+}
+
+\end{document}
