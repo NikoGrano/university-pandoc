@@ -8,8 +8,13 @@ import random
 import string
 import shutil
 import requests
+import tempfile
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+
+def get_script_path():
+    """Get the real path of the script, following symlinks"""
+    return os.path.dirname(os.path.realpath(os.path.abspath(sys.argv[0])))
 
 class DockerError(Exception):
     """Custom exception for Docker-related errors"""
@@ -119,9 +124,8 @@ def main():
         print(f"Error: Directory {source_dir} does not exist")
         sys.exit(1)
 
-    # Create temporary working directory
-    temp_dir = "temp_workdir"
-    os.makedirs(temp_dir, exist_ok=True)
+    # Create temporary working directory under /tmp
+    temp_dir = tempfile.mkdtemp(prefix='pandoc_build_')
 
     try:
         # Combine markdown files and get Zotero ID if present
@@ -129,15 +133,19 @@ def main():
         with open(os.path.join(temp_dir, "input.md"), 'w', encoding='utf-8') as f:
             f.write(combined_content)
 
-        # Check required files and directories
-        if not os.path.exists('lib'):
-            print("Error: 'lib' directory not found")
+        # Get the real script path and check required files
+        script_dir = get_script_path()
+        lib_path = os.path.join(script_dir, 'lib')
+        
+        if not os.path.exists(lib_path):
+            print(f"Error: 'lib' directory not found in {script_dir}")
             sys.exit(1)
 
         required_files = ['wordcount.lua', 'template.tex']
         for file in required_files:
-            if not os.path.exists(os.path.join('lib', file)):
-                print(f"Error: Required file 'lib/{file}' not found")
+            file_path = os.path.join(lib_path, file)
+            if not os.path.exists(file_path):
+                print(f"Error: Required file not found: {file_path}")
                 sys.exit(1)
 
         # Copy bibliography if exists
@@ -174,17 +182,30 @@ def main():
         elif bib_exists:
             shutil.copy2(os.path.join(source_dir, "bibliography.bib"), temp_dir)
 
-        # Copy logo if exists
-        if os.path.exists("assets/logo.jpg"):
-            shutil.copy2("assets/logo.jpg", temp_dir)
-        else:
-            print("Warning: assets/logo.jpg not found")
+        # Look for logo.jpg in various locations
+        logo_found = False
+        logo_locations = [
+            "logo.jpg",  # Current working directory
+            "assets/logo.jpg",  # Current working directory assets
+            os.path.join(source_dir, "logo.jpg"),  # Target directory
+            os.path.join(source_dir, "assets/logo.jpg"),  # Target directory assets
+            os.path.join(script_dir, "assets/logo.jpg"),  # Script directory assets
+        ]
+        
+        for logo_path in logo_locations:
+            if os.path.exists(logo_path):
+                shutil.copy2(logo_path, os.path.join(temp_dir, "logo.jpg"))
+                logo_found = True
+                break
+                
+        if not logo_found:
+            print("Warning: logo.jpg not found in any of the expected locations")
 
         # Prepare pandoc command
         pandoc_cmd = [
             "docker", "run", "--rm",
             "-v", f"{os.path.abspath(temp_dir)}:/workdir",
-            "-v", f"{os.path.abspath('lib')}:/pandoc_files",
+            "-v", f"{os.path.abspath(lib_path)}:/pandoc_files",
             "--entrypoint", "pandoc",
             "pandoc_pdf_local",
             "--output", "/workdir/out.tex",
