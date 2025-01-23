@@ -41,9 +41,12 @@
 \usepackage[bottom,multiple,stable]{footmisc}
 \interfootnotelinepenalty=9000
 \makeatletter
-\renewcommand\@makefntext[1]{\noindent\makebox[2em][r]{\@thefnmark.\hspace{1em}}#1}
+\renewcommand\@makefntext[1]{%
+    \parindent-0.3em
+    \hspace*{-0.5em}\makebox[1.5em][r]{\@thefnmark.}\hspace{0.5em}%
+    \parbox[t]{\dimexpr\linewidth-1.5em\relax}{#1}}
 \makeatother
-\setlength{\footnotesep}{1.5em}  % Space between footnotes
+\setlength{\footnotesep}{1em}  % Space between footnotes
 \setlength{\skip\footins}{2em}   % Space between text and footnotes
 \setlength{\dimen\footins}{20\baselineskip}  % Max height for footnotes
 \raggedbottom  % Allows some flexibility in page breaking
