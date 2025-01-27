@@ -1,4 +1,4 @@
-\documentclass[12pt]{extarticle}
+\documentclass[12pt,twoside]{extarticle}
 \usepackage{geometry}
 \usepackage{setspace}
 \usepackage{fontspec}
@@ -39,10 +39,15 @@
 
 % Custom footnote and page breaking settings
 \usepackage[bottom,multiple,stable]{footmisc}
+\renewcommand{\footnoterule}{%
+    \vspace*{0.1cm}%
+    \hrule width \textwidth height 0.4pt%
+    \vspace*{0.1cm}%
+}
 \interfootnotelinepenalty=9000
 \makeatletter
 \renewcommand\@makefntext[1]{%
-    \parindent-0.3em
+    \parindent0.5em
     \hspace*{-0.5em}\makebox[1.5em][r]{\@thefnmark.}\hspace{0.5em}%
     \parbox[t]{\dimexpr\linewidth-1.5em\relax}{#1}}
 \makeatother
@@ -50,21 +55,34 @@
 \setlength{\skip\footins}{2em}   % Space between text and footnotes
 \setlength{\dimen\footins}{20\baselineskip}  % Max height for footnotes
 \raggedbottom  % Allows some flexibility in page breaking
-\interfootnotelinepenalty=9000
+\interfootnotelinepenalty=10000
 \interlinepenalty=5000
-\widowpenalty=5000
-\clubpenalty=5000
+\widowpenalty=7500
+\clubpenalty=7500
 \tolerance=1000
+\brokenpenalty=10000
 \emergencystretch=1em
+
+% Macros for chapter titles
+\newcommand{\chaptertitlestart}{\vspace*{0.2cm}}
+\newcommand{\chaptertitlestop}{\vspace*{0.1cm}}
 
 % Page layout
 \geometry{a4paper, margin=3.5cm}
 
-% Page numbering setup
+% Page numbering and header setup
 \pagestyle{fancy}
 \fancyhf{} % Clear all header and footer fields
-\fancyhead[L]{\leftmark} % Section name in left header
-\fancyfoot[C]{\thepage} % Page number in center footer
+
+% Remove chapter numbering from header
+\renewcommand{\sectionmark}[1]{\markboth{\MakeUppercase{#1}}{}}
+\renewcommand{\subsectionmark}[1]{\markright{\MakeUppercase{#1}}}
+
+% Apply headers
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\leftmark}
+\fancyfoot[RE]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}  % 2pt increase (12pt -> 14pt)
+\fancyfoot[LO]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}  % 2pt increase (12pt -> 14pt)
 \renewcommand{\headrulewidth}{0.4pt} % Add a line under the header
 
 \begin{document}
@@ -116,7 +134,17 @@
 
 % Document details page
 \newpage
-\thispagestyle{empty}
+\thispagestyle{plain}
+
+% Skip page numbering
+\pagenumbering{gobble}
+
+% Dirty fix for Roman page numbering
+\fancyhf{} % Clear ALL previous settings
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\leftmark}
+\fancyfoot[LE]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}
+\fancyfoot[RO]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}
 
 % First section of table
 \begin{tabular}{|p{0.75\textwidth}|p{0.25\textwidth}|}
@@ -125,7 +153,7 @@
 % Second section of table
 \multicolumn{2}{|p{\textwidth}|}{%
     \begin{minipage}[t]{\dimexpr\textwidth-2\tabcolsep\relax}
-        \begin{tabular}{p{0.33\textwidth}p{0.33\textwidth}p{0.34\textwidth}}
+        \begin{tabular}{p{0.36\textwidth}p{0.367\textwidth}p{0.273\textwidth}}
             {\footnotesize Sivumäärä:} & {\footnotesize Sanamäärä:} & {\footnotesize Lukuaika:} \\
             \pageref{LastPage} & $wordcount$ & $readingtime$ min
         \end{tabular}
@@ -144,7 +172,7 @@ $opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
 % Last section of table
 \multicolumn{2}{|l|}{{\footnotesize Lisätiedot}} \\
 \multicolumn{2}{|p{\textwidth}|}{%
-    \begin{minipage}[t][\dimexpr\textheight-6cm\relax][t]{\dimexpr\textwidth-2\tabcolsep\relax}
+    \begin{minipage}[t][\dimexpr\textheight-7.5cm\relax][t]{\dimexpr\textwidth-2\tabcolsep\relax}
         $lisatiedot$
     \end{minipage}
 } \\ \hline
@@ -152,8 +180,8 @@ $opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
 \clearpage
 
 % Table of Contents page
-\renewcommand{\contentsname}{SISÄLLYS}
-\renewcommand{\refname}{LÄHTEET}
+\renewcommand{\contentsname}{SISÄLLYSLUETTELO}
+\renewcommand{\refname}{LÄHDELUETTELO}
 
 % Modify TOC style
 \makeatletter
@@ -164,13 +192,41 @@ $opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
 \renewcommand{\l@subsubsection}{\@dottedtocline{3}{5em}{2.5em}}
 \makeatother
 
+% Start Roman page numbering
+\pagenumbering{Roman}
+\setcounter{page}{1}
+
 % Add TOC
 \tableofcontents
 \clearpage
 
+% Add bibliography
+% TODO:
+%\defbibheading{kirj}{\section*{Kirjallisuus}}
+%\defbibheading{vira}{\section*{Virallislähteet}}
+%\defbibheading{oikt}{\section*{Oikeustapaukset}}
+
+%\printbibliography[heading=kirj,type=book]
+%\printbibliography[heading=none,type=inbook]
+%\printbibliography[heading=none,type=collection]
+%\printbibliography[heading=none,type=incollection]
+
+%\printbibliography[heading=oikt,type=jurisdiction]
+%\printbibliography[heading=oikt,type=legal]
+
+%\printbibliography
+%\clearpage
+
 % Start page numbering
 \pagenumbering{arabic}
 \setcounter{page}{1}
+
+% Revert dirty fix for Roman page numbering
+\fancyhf{} % Clear ALL previous settings again
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\leftmark}
+\fancyfoot[RE]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}
+\fancyfoot[LO]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}
 
 % Set main text font size to 14pt
 {\fontsize{14pt}{16.8pt}\selectfont

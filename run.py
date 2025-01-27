@@ -98,12 +98,15 @@ def generate_random_password(length=20):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: build_pdf.py <source_directory> [--ro] [--zotero ZOTERO_ID]")
+        print("Usage: build_pdf.py <source_directory> [--ro] [--zotero ZOTERO_ID] [--html]")
         sys.exit(1)
 
+    html_mode = "--html" in sys.argv
+    
     try:
-        check_docker()
-        ensure_docker_image()
+        if not html_mode:
+            check_docker()
+            ensure_docker_image()
     except DockerError as e:
         print(f"Docker error: {str(e)}")
         sys.exit(1)
@@ -284,29 +287,51 @@ def main():
                 print("Error: XeLaTeX failed to create out.pdf")
                 sys.exit(1)
 
-        if readonly_mode:
-            password = generate_random_password()
+        if html_mode:
+            # For HTML mode, use pandoc to convert markdown to HTML
             try:
                 subprocess.run([
                     "docker", "run", "--rm",
                     "-v", f"{os.path.abspath(temp_dir)}:/workdir",
-                    "--entrypoint", "qpdf",
+                    "--entrypoint", "pandoc",
                     "pandoc_pdf_local",
-                    "--encrypt", owner_password, password, "256",
-                    "--print=none",
-                    "--modify=none",
-                    "--extract=n",
-                    "--annotate=n",
-                    "--",
-                    "/workdir/out.pdf", "/workdir/protected.pdf"
+                    "/workdir/input.md",
+                    "-f", "markdown",
+                    "-t", "html",
+                    "-s",  # standalone HTML with header and footer
+                    "-o", "/workdir/out.html",
+                    "--metadata", "title=Document",
+                    "--css=https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
                 ], check=True)
+                shutil.copy2(os.path.join(temp_dir, "out.html"), "out.html")
+                print("Generated HTML output: out.html")
             except subprocess.CalledProcessError as e:
-                print(f"Error encrypting PDF: {str(e)}")
+                print(f"Error generating HTML: {str(e)}")
                 sys.exit(1)
-            print(f"\nPDF owner password: {password}")
-            shutil.copy2(os.path.join(temp_dir, "protected.pdf"), "out.pdf")
         else:
-            shutil.copy2(os.path.join(temp_dir, "out.pdf"), "out.pdf")
+            if readonly_mode:
+                password = generate_random_password()
+                try:
+                    subprocess.run([
+                        "docker", "run", "--rm",
+                        "-v", f"{os.path.abspath(temp_dir)}:/workdir",
+                        "--entrypoint", "qpdf",
+                        "pandoc_pdf_local",
+                        "--encrypt", owner_password, password, "256",
+                        "--print=none",
+                        "--modify=none",
+                        "--extract=n",
+                        "--annotate=n",
+                        "--",
+                        "/workdir/out.pdf", "/workdir/protected.pdf"
+                    ], check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Error encrypting PDF: {str(e)}")
+                    sys.exit(1)
+                print(f"\nPDF owner password: {password}")
+                shutil.copy2(os.path.join(temp_dir, "protected.pdf"), "out.pdf")
+            else:
+                shutil.copy2(os.path.join(temp_dir, "out.pdf"), "out.pdf")
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
