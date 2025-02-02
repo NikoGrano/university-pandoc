@@ -1,4 +1,5 @@
 \documentclass[12pt,twoside]{extarticle}
+\usepackage{enumitem}
 \usepackage{geometry}
 \usepackage{setspace}
 \usepackage{fontspec}
@@ -192,6 +193,7 @@ $opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
 \renewcommand{\l@subsubsection}{\@dottedtocline{3}{5em}{2.5em}}
 \makeatother
 
+$if(toc)$
 % Start Roman page numbering
 \pagenumbering{Roman}
 \setcounter{page}{1}
@@ -199,6 +201,7 @@ $opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
 % Add TOC
 \tableofcontents
 \clearpage
+$endif$
 
 % Add bibliography
 % TODO:
@@ -228,8 +231,8 @@ $opintokokonaisuus_nimi$ & $opintokokonaisuus$ \\ \hline
 \fancyfoot[RE]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}
 \fancyfoot[LO]{{\fontsize{14pt}{16.8pt}\selectfont\thepage}}
 
-% Set main text font size to 14pt
-{\fontsize{14pt}{16.8pt}\selectfont
+% Set main text font size (default 14pt if not specified)
+{\fontsize{$if(font)$$font$pt$else$14pt$endif$}{$if(font)$\dimexpr1.2\dimexpr$font$pt\relax\relax$else$16.8pt$endif$}\selectfont
 $body$
 }
 

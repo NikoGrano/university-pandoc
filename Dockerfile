@@ -19,6 +19,7 @@ RUN apk add --no-cache --quiet \
           footmisc \
           biblatex-sbl \
           biblatex-chicago \
-          xstring
+          xstring \
+          enumitem
 
 WORKDIR /workdir
